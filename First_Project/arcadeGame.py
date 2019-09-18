@@ -57,7 +57,7 @@ class MinimalArcade(arcade.Window):
         self.player_list= arcade.SpriteList()
 
         """Sets up player"""
-        self.player_sprite = BasePlayer("images/player.png", SPRITE_SCALING, 20, 200)
+        self.player_sprite = BasePlayer("images/player.png", SPRITE_SCALING, 200, 200)
         self.player_list.append(self.player_sprite)
 
     def on_draw(self):
