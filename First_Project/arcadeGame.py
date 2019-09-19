@@ -37,6 +37,8 @@ class MinimalArcade(arcade.Window):
         """self.image_path = pathlib.Path.cwd() / 'Assests' / image_name"""
         """Sets background variable"""
         self.background = None
+        self.background_x = 0
+        self.background_y = 0;
 
         # These are 'lists' that keep track of our sprites. Each sprite should
         # go into a list.
@@ -52,6 +54,9 @@ class MinimalArcade(arcade.Window):
         # Set up your game here
         """Imports background"""
         self.background = arcade.load_texture("images/background.png")
+        self.background_reflect = arcade.load_texture("images/background_reflect.png")
+        self.background_x = SCREEN_W
+        self.background_y = SCREEN_H
 
         """Sets up player sprite list"""
         self.player_list= arcade.SpriteList()
@@ -64,8 +69,9 @@ class MinimalArcade(arcade.Window):
         """ Render the screen. """
         arcade.start_render()
         # Draw the background texture
-        arcade.draw_texture_rectangle(SCREEN_W// 2, SCREEN_H // 2,
+        arcade.draw_texture_rectangle((self.background_x) // 2 , self.background_y // 2,
                                       SCREEN_W, SCREEN_H, self.background)
+        arcade.draw_texture_rectangle((self.background_x + SCREEN_W*2) // 2, self.background_y // 2, SCREEN_W, SCREEN_H, self.background_reflect)
 
         """Draws the sprites"""
         self.player_list.draw()
@@ -75,7 +81,24 @@ class MinimalArcade(arcade.Window):
 
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
-        pass
+        print("center_x", self.background_x)
+        """logic for scrollng background to the left"""
+
+        if self.background_x > -(SCREEN_W*2):
+            self.background_x -= 1
+        else:
+            self.background_x = 800
+
+
+        """while 1:
+            arcade.draw_texture_rectangle(self.background_x, self.background_y, SCREEN_W, SCREEN_H, self.background)
+            if self.background_x < 1080:
+                self.background_x += 1
+            else:
+                self.background = 0
+        """
+
+
 
 def main():
     """Main method"""
