@@ -38,7 +38,9 @@ class MinimalArcade(arcade.Window):
         """Sets background variable"""
         self.background = None
         self.background_x = 0
-        self.background_y = 0;
+        self.background_y = 0
+        self.background_reflect_x = 0
+        self.background_reflect_y = 0
 
         # These are 'lists' that keep track of our sprites. Each sprite should
         # go into a list.
@@ -52,11 +54,13 @@ class MinimalArcade(arcade.Window):
 
     def setup(self):
         # Set up your game here
-        """Imports background"""
+        """Imports background imags for side scrolling"""
         self.background = arcade.load_texture("images/background.png")
         self.background_reflect = arcade.load_texture("images/background_reflect.png")
         self.background_x = SCREEN_W
         self.background_y = SCREEN_H
+        self.background_reflect_x = SCREEN_W*3
+        self.background_reflect_y = SCREEN_H
 
         """Sets up player sprite list"""
         self.player_list= arcade.SpriteList()
@@ -71,7 +75,7 @@ class MinimalArcade(arcade.Window):
         # Draw the background texture
         arcade.draw_texture_rectangle((self.background_x) // 2 , self.background_y // 2,
                                       SCREEN_W, SCREEN_H, self.background)
-        arcade.draw_texture_rectangle((self.background_x + SCREEN_W*2) // 2, self.background_y // 2, SCREEN_W, SCREEN_H, self.background_reflect)
+        arcade.draw_texture_rectangle(self.background_reflect_x // 2, self.background_y // 2, SCREEN_W, SCREEN_H, self.background_reflect)
 
         """Draws the sprites"""
         self.player_list.draw()
@@ -81,22 +85,22 @@ class MinimalArcade(arcade.Window):
 
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
-        print("center_x", self.background_x)
+        #print("center_X2", self.background_reflect_x)
         """logic for scrollng background to the left"""
-
-        if self.background_x > -(SCREEN_W*2):
+        """Background One"""
+        if (self.background_x > -(SCREEN_W)):
             self.background_x -= 1
         else:
-            self.background_x = 800
+            self.background_x = SCREEN_W *3 - 1
+
+        """Background Two_Reflect"""
+        if(self.background_reflect_x > -(SCREEN_W)):
+            self.background_reflect_x -= 1
+        else:
+            self.background_reflect_x = SCREEN_W * 3 - 1
 
 
-        """while 1:
-            arcade.draw_texture_rectangle(self.background_x, self.background_y, SCREEN_W, SCREEN_H, self.background)
-            if self.background_x < 1080:
-                self.background_x += 1
-            else:
-                self.background = 0
-        """
+
 
 
 
