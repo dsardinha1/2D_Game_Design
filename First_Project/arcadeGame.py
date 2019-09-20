@@ -6,11 +6,22 @@ SCREEN_W = 800
 SCREEN_H = 600
 SCREEN_TITLE = "Quaker's Hunt"
 SPRITE_SCALING = 0.25
+MOVEMENT_SPEED = 10
 
 class BasePlayer(arcade.Sprite):
 
     def __init__(self,image_location, scaling, x_position, y_position):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
+        self.direction = None
+
+    def move(self):
+        """Player's direction logic"""
+
+        if (self.direction == "up"):
+            self.center_y += MOVEMENT_SPEED
+        elif (self.direction == "down"):
+            self.center_y -= MOVEMENT_SPEED
+        pass
 
     def update(self):
         self.center_x += self.change_x
@@ -69,6 +80,24 @@ class MinimalArcade(arcade.Window):
         self.player_sprite = BasePlayer("images/player.png", SPRITE_SCALING, 200, 200)
         self.player_list.append(self.player_sprite)
 
+    def on_key_press(self, key, modifiers):
+        """Controls when  key is pressed"""
+        if (key == arcade.key.UP or key == arcade.key.W):
+            self.player_sprite.direction = "up"
+        elif (key == arcade.key.DOWN or key == arcade.key.S):
+            self.player_sprite.direction = "down"
+
+    def on_key_release(self, key, modifiers):
+        """Controls when a key is released"""
+
+        """Resets player's sprite movement variable"""
+        if (key == arcade.key.UP or key == arcade.key.W) and \
+            self.player_sprite.direction == "up":
+            self.player_sprite.direction = None
+        elif (key == arcade.key.DOWN or key == arcade.key.S) and \
+            self.player_sprite.direction == "down":
+            self.player_sprite.direction = None
+
     def on_draw(self):
         """ Render the screen. """
         arcade.start_render()
@@ -99,6 +128,8 @@ class MinimalArcade(arcade.Window):
         else:
             self.background_reflect_x = SCREEN_W * 3 - 1
 
+        """Calls to move player"""
+        self.player_sprite.move()
 
 
 
