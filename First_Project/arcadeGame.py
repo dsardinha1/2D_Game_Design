@@ -37,10 +37,10 @@ class MinimalArcade(arcade.Window):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
 
+        """Sets up file path variables"""
+        self.sound_path = None
+        self.image_path = None
 
-        """This lets python know where the image and audio files will be located easier"""
-        """.cwd is the file path of the current working directory"""
-        """self.image_path = pathlib.Path.cwd() / 'Assests' / image_name"""
         """Sets background variable"""
         self.background = None
         self.background_x = 0
@@ -57,14 +57,20 @@ class MinimalArcade(arcade.Window):
         self.player_sprite = None
         self.player_weapon_sprite = None
 
+        """Holds the sound variables"""
+        self.weapon_throw_sound = None
+
         """Sets background color"""
         arcade.set_background_color(arcade.color.ALABAMA_CRIMSON)
 
     def setup(self):
         # Set up your game here
+        self.sound_path = str(pathlib.Path.cwd()) + '/audio/'
+        self.image_path = str(pathlib.Path.cwd()) + '/images/'
+
         """Imports background images for side scrolling"""
-        self.background = arcade.load_texture("images/background.png")
-        self.background_reflect = arcade.load_texture("images/background_reflect.png")
+        self.background = arcade.load_texture(self.image_path + "background.png")
+        self.background_reflect = arcade.load_texture(self.image_path + "background_reflect.png")
         self.background_x = SCREEN_W
         self.background_y = SCREEN_H
         self.background_reflect_x = SCREEN_W*3
@@ -74,9 +80,13 @@ class MinimalArcade(arcade.Window):
         self.player_list= arcade.SpriteList()
         self.player_weapon_list = arcade.SpriteList()
 
+        """Sets weapon sound"""
+
+        self.weapon_throw_sound = arcade.load_sound(self.sound_path + "throwing_spear.wav")
+
         #Image from OrgeofWart on opengameart.org
         """Sets up player"""
-        self.player_sprite = BasePlayer("images/player.png", SPRITE_SCALING, 200, 200)
+        self.player_sprite = BasePlayer(self.image_path + "player.png", SPRITE_SCALING, 200, 200)
         self.player_list.append(self.player_sprite)
 
     def on_key_press(self, key, modifiers):
@@ -136,11 +146,13 @@ class MinimalArcade(arcade.Window):
 
     def player_shoot(self):
         """Logic when the player activates weapon"""
+        arcade.play_sound(self.weapon_throw_sound)
         self.player_weapon_sprite = BasePlayer("images/spear.png", SPRITE_SCALING,  100, 150)
         self.player_weapon_sprite.center_x = self.player_sprite.center_x
         self.player_weapon_sprite.center_y = self.player_sprite.center_y
         self.player_weapon_sprite.change_x = MOVEMENT_SPEED
         self.player_weapon_list.append(self.player_weapon_sprite)
+        arcade.stop_sound(self.weapon_throw_sound)
         pass
 
 
