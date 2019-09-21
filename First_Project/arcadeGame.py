@@ -8,6 +8,7 @@ SCREEN_TITLE = "Quaker's Hunt"
 SPRITE_SCALING = 0.25
 MOVEMENT_SPEED = 10
 
+
 class BasePlayer(arcade.Sprite):
 
     def __init__(self,image_location, scaling, x_position, y_position):
@@ -16,6 +17,13 @@ class BasePlayer(arcade.Sprite):
 
     def move(self):
         """Player's direction logic"""
+        """Makes the player sprite bounce from the borders of the screen"""
+        if(self.top > SCREEN_H):
+            self.center_y -= 1
+            self.direction = None
+        elif (self.bottom < 0):
+            self.center_y += 1
+            self.direction = None
 
         if (self.direction == "up"):
             self.center_y += MOVEMENT_SPEED
@@ -23,19 +31,6 @@ class BasePlayer(arcade.Sprite):
             self.center_y -= MOVEMENT_SPEED
         pass
 
-    def update(self):
-        self.center_x += self.change_x
-        self.center_y += self.change_y
-
-        if self.left < 0:
-            self.left = 0
-        elif self.right > SCREEN_W- 1:
-            self.right = SCREEN_W - 1
-
-        if self.bottom < 0:
-            self.bottom = 0
-        elif self.top > SCREEN_H - 1:
-            self.top = SCREEN_H - 1
 
 class MinimalArcade(arcade.Window):
     """ Main application class. """
@@ -56,16 +51,18 @@ class MinimalArcade(arcade.Window):
         # These are 'lists' that keep track of our sprites. Each sprite should
         # go into a list.
         self.player_list = None
+        self.player_weapon_list = None
 
         """Holds player Sprite"""
         self.player_sprite = None
+        self.player_weapon_sprite = None
 
         """Sets background color"""
         arcade.set_background_color(arcade.color.ALABAMA_CRIMSON)
 
     def setup(self):
         # Set up your game here
-        """Imports background imags for side scrolling"""
+        """Imports background images for side scrolling"""
         self.background = arcade.load_texture("images/background.png")
         self.background_reflect = arcade.load_texture("images/background_reflect.png")
         self.background_x = SCREEN_W
@@ -73,9 +70,11 @@ class MinimalArcade(arcade.Window):
         self.background_reflect_x = SCREEN_W*3
         self.background_reflect_y = SCREEN_H
 
-        """Sets up player sprite list"""
+        """Sets up sprites' list"""
         self.player_list= arcade.SpriteList()
+        self.player_weapon_list = arcade.SpriteList()
 
+        #Image from OrgeofWart on opengameart.org
         """Sets up player"""
         self.player_sprite = BasePlayer("images/player.png", SPRITE_SCALING, 200, 200)
         self.player_list.append(self.player_sprite)
@@ -86,6 +85,8 @@ class MinimalArcade(arcade.Window):
             self.player_sprite.direction = "up"
         elif (key == arcade.key.DOWN or key == arcade.key.S):
             self.player_sprite.direction = "down"
+        elif (key == arcade.key.SPACE):
+            self.player_shoot()
 
     def on_key_release(self, key, modifiers):
         """Controls when a key is released"""
@@ -108,6 +109,7 @@ class MinimalArcade(arcade.Window):
 
         """Draws the sprites"""
         self.player_list.draw()
+        self.player_weapon_list.draw()
 
         """Finalizes the screen render"""
         arcade.finish_render()
@@ -130,8 +132,16 @@ class MinimalArcade(arcade.Window):
 
         """Calls to move player"""
         self.player_sprite.move()
+        self.player_weapon_list.update()
 
-
+    def player_shoot(self):
+        """Logic when the player activates weapon"""
+        self.player_weapon_sprite = BasePlayer("images/spear.png", SPRITE_SCALING,  100, 150)
+        self.player_weapon_sprite.center_x = self.player_sprite.center_x
+        self.player_weapon_sprite.center_y = self.player_sprite.center_y
+        self.player_weapon_sprite.change_x = MOVEMENT_SPEED
+        self.player_weapon_list.append(self.player_weapon_sprite)
+        pass
 
 
 
