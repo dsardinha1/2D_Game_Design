@@ -5,7 +5,7 @@ last edit on September 21th, 2019
 
 What is the purpose of the program?
 
-    This project is a simple python side scrolling platformer that is used to get familiar with pythn language. This
+    This project is a simple python side scrolling platformer that is used to get familiar with python language. This
 simple game called "Quacker's Hunt" uses the arcade python library to project a small arcade style game. All audio and
 images for the game were created by myself or otherwise stated in the source code of the game to give proper accreditation.
 
@@ -13,7 +13,7 @@ images for the game were created by myself or otherwise stated in the source cod
 How do I Use the program?
 
     Download the .zip of the project and open arcadeGame.py file using python3.7 and arcade module installed. This program
-currently only moves the player sprite up and down the screen with the background images scrolling to the left.
+currently only moves the player sprite up and down the screen, while with the background images scrolling to the left.
 
 What keys to use?
 

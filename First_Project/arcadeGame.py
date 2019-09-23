@@ -8,12 +8,12 @@ SCREEN_TITLE = "Quaker's Hunt"
 SPRITE_SCALING = 0.25
 MOVEMENT_SPEED = 10
 
+class BaseSprite(arcade.Sprite):
 
-class BasePlayer(arcade.Sprite):
-
-    def __init__(self,image_location, scaling, x_position, y_position):
+    def __init__(self,image_location, scaling, x_position, y_position, moveAuto = False):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
         self.direction = None
+        self.moveAuto = None
 
     def move(self):
         """Player's direction logic"""
@@ -65,6 +65,8 @@ class MinimalArcade(arcade.Window):
 
     def setup(self):
         # Set up your game here
+        """Check collision logic here"""
+
         self.sound_path = str(pathlib.Path.cwd()) + '/audio/'
         self.image_path = str(pathlib.Path.cwd()) + '/images/'
 
@@ -81,12 +83,11 @@ class MinimalArcade(arcade.Window):
         self.player_weapon_list = arcade.SpriteList()
 
         """Sets weapon sound"""
-
         self.weapon_throw_sound = arcade.load_sound(self.sound_path + "throwing_spear.wav")
 
         #Image from OrgeofWart on opengameart.org
         """Sets up player"""
-        self.player_sprite = BasePlayer(self.image_path + "player.png", SPRITE_SCALING, 200, 200)
+        self.player_sprite = BaseSprite(self.image_path + "player.png", SPRITE_SCALING, 200, 200)
         self.player_list.append(self.player_sprite)
 
     def on_key_press(self, key, modifiers):
@@ -147,7 +148,7 @@ class MinimalArcade(arcade.Window):
     def player_shoot(self):
         """Logic when the player activates weapon"""
         arcade.play_sound(self.weapon_throw_sound)
-        self.player_weapon_sprite = BasePlayer("images/spear.png", SPRITE_SCALING,  100, 150)
+        self.player_weapon_sprite = BaseSprite("images/spear.png", SPRITE_SCALING,  100, 150)
         self.player_weapon_sprite.center_x = self.player_sprite.center_x
         self.player_weapon_sprite.center_y = self.player_sprite.center_y
         self.player_weapon_sprite.change_x = MOVEMENT_SPEED
