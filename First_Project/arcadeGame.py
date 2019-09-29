@@ -15,13 +15,14 @@ MOVEMENT_SPEED = 10
 ENEMY_SPRITE_SCALING = 0.625
 
 class BaseEnemy(arcade.Sprite):
-    def __init__(self,image_location, scaling, x_position, y_position, moveAuto = False):
+    def __init__(self,image_location, scaling, x_position, y_position, motionSpeed = 0, moveAuto = False):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
-        self.moveAuto = None
+        self.moveAuto = moveAuto
+        self.motionSpeed = motionSpeed
 
     def update(self):
         if self.moveAuto == True:
-           self.center_x -= MOVEMENT_SPEED/2
+           self.center_x -= self.motionSpeed
         pass
 
 
@@ -84,6 +85,8 @@ class MinimalArcade(arcade.Window):
         """Holds the sound variables"""
         self.weapon_throw_sound = None
         self.energy_sound = None
+        self.player_death_sound = None
+        self.enemy_death_sound = None
 
         """Sets background color"""
         arcade.set_background_color(arcade.color.ALABAMA_CRIMSON)
@@ -112,6 +115,8 @@ class MinimalArcade(arcade.Window):
         """Sets weapon sound"""
         self.weapon_throw_sound = arcade.load_sound(self.sound_path + "throwing_spear.wav")
         self.energy_sound = arcade.load_sound(self.sound_path + "energy.wav")
+        self.enemy_death_sound = arcade.load_sound(self.sound_path + "enemy_death.wav")
+        self.player_death_sound = arcade.load_sound(self.sound_path + "player_death.wav")
 
         #Image from OrgeofWart on opengameart.org
         """Sets up player"""
@@ -183,8 +188,6 @@ class MinimalArcade(arcade.Window):
         self.enemy_sprite.update()
         self.enemy_weapon_list.update()
 
-
-
         """Kills spears the go off screen and enable for periodic shots"""
         for spear in self.player_weapon_list:
             if spear.center_x == SCREEN_W:
@@ -203,6 +206,7 @@ class MinimalArcade(arcade.Window):
             """Removes enemies from the hit list"""
             for enemy in spear_hit_list:
                 enemy.remove_from_sprite_lists()
+                arcade.play_sound(self.enemy_death_sound)
 
         """Creates list for enemys' energy blasts with player """
         for energy_blast in self.enemy_weapon_list:
@@ -210,6 +214,7 @@ class MinimalArcade(arcade.Window):
             """Removes enemies from the hit list"""
             for player in enemy_hit_list:
                 player.remove_from_sprite_lists()
+                arcade.play_sound(self.player_death_sound)
                 arcade.pause(5)
                 self.setup()
 
@@ -238,11 +243,10 @@ class MinimalArcade(arcade.Window):
             #if the following random condition meets, then that enemy fire a shoot
             if random.randrange(200) == 25:
                 enemy_weapon_sprite = BaseEnemy(self.image_path + "energy_Blast.png", PLAYER_SPRITE_SCALING / 2, enemy.center_x,
-                                                enemy.center_y)
+                                                enemy.center_y, 5, True)
 
                 self.enemy_weapon_list.append(enemy_weapon_sprite)
                 arcade.play_sound(self.energy_sound)
-                enemy_weapon_sprite.moveAuto = True
         pass
 
 def main():
