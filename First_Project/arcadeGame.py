@@ -1,3 +1,6 @@
+import random
+import threading
+
 import arcade
 import pathlib
 
@@ -5,15 +8,31 @@ import pathlib
 SCREEN_W = 800
 SCREEN_H = 600
 SCREEN_TITLE = "Quaker's Hunt"
-SPRITE_SCALING = 0.25
+PLAYER_SPRITE_SCALING = 0.25
 MOVEMENT_SPEED = 10
 
-class BaseSprite(arcade.Sprite):
+"""Enemy Variables"""
+ENEMY_SPRITE_SCALING = 0.625
 
+class BaseEnemy(arcade.Sprite):
     def __init__(self,image_location, scaling, x_position, y_position, moveAuto = False):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
-        self.direction = None
         self.moveAuto = None
+
+    def update(self):
+        if self.moveAuto == True:
+           self.center_x -= MOVEMENT_SPEED/2
+        pass
+
+
+
+
+class BasePlayer(arcade.Sprite):
+
+    def __init__(self,image_location, scaling, x_position, y_position):
+        super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
+        self.direction = None
+        self.fire_weapon = True
 
     def move(self):
         """Player's direction logic"""
@@ -31,6 +50,8 @@ class BaseSprite(arcade.Sprite):
             self.center_y -= MOVEMENT_SPEED
         pass
 
+    def changeWeaponFire(self):
+        self.fire_weapon = not self.fire_weapon
 
 class MinimalArcade(arcade.Window):
     """ Main application class. """
@@ -43,22 +64,26 @@ class MinimalArcade(arcade.Window):
 
         """Sets background variable"""
         self.background = None
-        self.background_x = 0
-        self.background_y = 0
-        self.background_reflect_x = 0
-        self.background_reflect_y = 0
+        self.background_x, background_y = 0, 0
+        self.background_reflect_x, background_reflect_y = 0, 0
+
 
         # These are 'lists' that keep track of our sprites. Each sprite should
         # go into a list.
         self.player_list = None
         self.player_weapon_list = None
+        self.enemy_list = None
+        self.enemy_weapon_list = None
 
         """Holds player Sprite"""
         self.player_sprite = None
         self.player_weapon_sprite = None
+        self.enemy_sprite = None
+        self.enemy_weapon_sprite = None
 
         """Holds the sound variables"""
         self.weapon_throw_sound = None
+        self.energy_sound = None
 
         """Sets background color"""
         arcade.set_background_color(arcade.color.ALABAMA_CRIMSON)
@@ -81,14 +106,22 @@ class MinimalArcade(arcade.Window):
         """Sets up sprites' list"""
         self.player_list= arcade.SpriteList()
         self.player_weapon_list = arcade.SpriteList()
+        self.enemy_list = arcade.SpriteList()
+        self.enemy_weapon_list = arcade.SpriteList()
 
         """Sets weapon sound"""
         self.weapon_throw_sound = arcade.load_sound(self.sound_path + "throwing_spear.wav")
+        self.energy_sound = arcade.load_sound(self.sound_path + "energy.wav")
 
         #Image from OrgeofWart on opengameart.org
         """Sets up player"""
-        self.player_sprite = BaseSprite(self.image_path + "player.png", SPRITE_SCALING, 200, 200)
+        self.player_sprite = BasePlayer(self.image_path + "player.png", PLAYER_SPRITE_SCALING, 200, 200)
+        self.player_weapon_sprite = BasePlayer(self.image_path + "spear.png", PLAYER_SPRITE_SCALING, 100, 150)
         self.player_list.append(self.player_sprite)
+
+        """Function to spawn first enemy is called"""
+        self.spawn_enemy()
+
 
     def on_key_press(self, key, modifiers):
         """Controls when  key is pressed"""
@@ -121,6 +154,9 @@ class MinimalArcade(arcade.Window):
         """Draws the sprites"""
         self.player_list.draw()
         self.player_weapon_list.draw()
+        self.enemy_weapon_list.draw()
+        self.enemy_list.draw()
+
 
         """Finalizes the screen render"""
         arcade.finish_render()
@@ -144,19 +180,70 @@ class MinimalArcade(arcade.Window):
         """Calls to move player"""
         self.player_sprite.move()
         self.player_weapon_list.update()
+        self.enemy_sprite.update()
+        self.enemy_weapon_list.update()
+
+
+
+        """Kills spears the go off screen and enable for periodic shots"""
+        for spear in self.player_weapon_list:
+            if spear.center_x == SCREEN_W:
+                spear.kill()
+            elif spear.center_x ==SCREEN_W-200:
+                self.player_sprite.changeWeaponFire()
+
+        """Randomly spawns an enemy couple of seconds"""
+        if random.randrange(250) == 0:
+           self.spawn_enemy()
+        self.enemy_shoot()
+
+        """Creates list for player spears with enemy mobs"""
+        for spear in self.player_weapon_list:
+            spear_hit_list = arcade.check_for_collision_with_list(spear, self.enemy_list)
+            """Removes enemies from the hit list"""
+            for enemy in spear_hit_list:
+                enemy.remove_from_sprite_lists()
+
+        """Creates list for enemys' energy blasts with player """
+        for energy_blast in self.enemy_weapon_list:
+            enemy_hit_list = arcade.check_for_collision_with_list(energy_blast, self.player_list)
+            """Removes enemies from the hit list"""
+            for player in enemy_hit_list:
+                player.remove_from_sprite_lists()
+                arcade.pause(5)
+                self.setup()
+
+    def spawn_enemy(self):
+        #Image is by TearOfTheStar on opengameart.org
+        self.enemy_sprite = BaseEnemy(self.image_path + "enemy.png", ENEMY_SPRITE_SCALING, random.randrange(SCREEN_W / 2, SCREEN_W),
+                                      random.randrange(SCREEN_H))
+        self.enemy_list.append(self.enemy_sprite)
+        pass
 
     def player_shoot(self):
         """Logic when the player activates weapon"""
-        arcade.play_sound(self.weapon_throw_sound)
-        self.player_weapon_sprite = BaseSprite("images/spear.png", SPRITE_SCALING,  100, 150)
-        self.player_weapon_sprite.center_x = self.player_sprite.center_x
-        self.player_weapon_sprite.center_y = self.player_sprite.center_y
-        self.player_weapon_sprite.change_x = MOVEMENT_SPEED
-        self.player_weapon_list.append(self.player_weapon_sprite)
-        arcade.stop_sound(self.weapon_throw_sound)
+        if self.player_sprite.fire_weapon == True:
+            arcade.play_sound(self.weapon_throw_sound)
+            self.player_weapon_sprite = BasePlayer(self.image_path + "spear.png", PLAYER_SPRITE_SCALING, 100, 150)
+            self.player_weapon_sprite.center_x = self.player_sprite.center_x
+            self.player_weapon_sprite.center_y = self.player_sprite.center_y
+            self.player_weapon_sprite.change_x = MOVEMENT_SPEED
+            self.player_weapon_list.append(self.player_weapon_sprite)
+            self.player_sprite.changeWeaponFire()
         pass
 
+    def enemy_shoot(self):
+        """Goes through each enemy"""
+        for enemy in self.enemy_list:
+            #if the following random condition meets, then that enemy fire a shoot
+            if random.randrange(200) == 25:
+                enemy_weapon_sprite = BaseEnemy(self.image_path + "energy_Blast.png", PLAYER_SPRITE_SCALING / 2, enemy.center_x,
+                                                enemy.center_y)
 
+                self.enemy_weapon_list.append(enemy_weapon_sprite)
+                arcade.play_sound(self.energy_sound)
+                enemy_weapon_sprite.moveAuto = True
+        pass
 
 def main():
     """Main method"""
