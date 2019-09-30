@@ -14,6 +14,7 @@ MOVEMENT_SPEED = 10
 """Enemy Variables"""
 ENEMY_SPRITE_SCALING = 0.625
 
+
 class BaseEnemy(arcade.Sprite):
     def __init__(self,image_location, scaling, x_position, y_position, motionSpeed = 0, moveAuto = False):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
@@ -59,6 +60,9 @@ class MinimalArcade(arcade.Window):
     def __init__(self, width, height, title):
         super().__init__(width, height, title)
 
+        "Sets up current game state variable"
+        self.currentGameState = None
+
         """Sets up file path variables"""
         self.sound_path = None
         self.image_path = None
@@ -94,6 +98,7 @@ class MinimalArcade(arcade.Window):
     def setup(self):
         # Set up your game here
         """Check collision logic here"""
+        self.currentGameState = 'GAME_RUNNING'
 
         self.sound_path = str(pathlib.Path.cwd()) + '/audio/'
         self.image_path = str(pathlib.Path.cwd()) + '/images/'
@@ -150,73 +155,90 @@ class MinimalArcade(arcade.Window):
 
     def on_draw(self):
         """ Render the screen. """
+
         arcade.start_render()
         # Draw the background texture
-        arcade.draw_texture_rectangle((self.background_x) // 2 , self.background_y // 2,
-                                      SCREEN_W, SCREEN_H, self.background)
-        arcade.draw_texture_rectangle(self.background_reflect_x // 2, self.background_y // 2, SCREEN_W, SCREEN_H, self.background_reflect)
 
-        """Draws the sprites"""
-        self.player_list.draw()
-        self.player_weapon_list.draw()
-        self.enemy_weapon_list.draw()
-        self.enemy_list.draw()
+        if self.currentGameState == 'GAME_RUNNING':
+            arcade.draw_texture_rectangle((self.background_x) // 2 , self.background_y // 2,
+                                              SCREEN_W, SCREEN_H, self.background)
+            arcade.draw_texture_rectangle(self.background_reflect_x // 2, self.background_y // 2, SCREEN_W, SCREEN_H, self.background_reflect)
+
+            """Draws the sprites"""
+            self.player_list.draw()
+            self.player_weapon_list.draw()
+            self.enemy_weapon_list.draw()
+            self.enemy_list.draw()
+        elif self.currentGameState == 'GAME_OVER':
+            self.draw_game_over()
+            pass
 
 
         """Finalizes the screen render"""
         arcade.finish_render()
 
+    def draw_game_over(self):
+        """Logic for Game over screen"""
+        arcade.draw_text("You lost!", SCREEN_W/2, SCREEN_H/2, arcade.color.ANTIQUE_RUBY, font_size=48, font_name='arial', anchor_x='center')
+        arcade.set_background_color(arcade.color.PURPLE_HEART)
+        pass
+
     def update(self, delta_time):
         """ All the logic to move, and the game logic goes here. """
         #print("center_X2", self.background_reflect_x)
         """logic for scrollng background to the left"""
-        """Background One"""
-        if (self.background_x > -(SCREEN_W)):
-            self.background_x -= 1
-        else:
-            self.background_x = SCREEN_W *3 - 1
 
-        """Background Two_Reflect"""
-        if(self.background_reflect_x > -(SCREEN_W)):
-            self.background_reflect_x -= 1
-        else:
-            self.background_reflect_x = SCREEN_W * 3 - 1
+        if self.currentGameState == 'GAME_RUNNING':
 
-        """Calls to move player"""
-        self.player_sprite.move()
-        self.player_weapon_list.update()
-        self.enemy_sprite.update()
-        self.enemy_weapon_list.update()
+            """Background One"""
+            if (self.background_x > -(SCREEN_W)):
+                self.background_x -= 1
+            else:
+                self.background_x = SCREEN_W *3 - 1
 
-        """Kills spears the go off screen and enable for periodic shots"""
-        for spear in self.player_weapon_list:
-            if spear.center_x == SCREEN_W:
-                spear.kill()
-            elif spear.center_x ==SCREEN_W-200:
-                self.player_sprite.changeWeaponFire()
+            """Background Two_Reflect"""
+            if(self.background_reflect_x > -(SCREEN_W)):
+                self.background_reflect_x -= 1
+            else:
+                self.background_reflect_x = SCREEN_W * 3 - 1
 
-        """Randomly spawns an enemy couple of seconds"""
-        if random.randrange(250) == 0:
-           self.spawn_enemy()
-        self.enemy_shoot()
+            """Calls to move player"""
+            self.player_sprite.move()
+            self.player_weapon_list.update()
+            self.enemy_sprite.update()
+            self.enemy_weapon_list.update()
 
-        """Creates list for player spears with enemy mobs"""
-        for spear in self.player_weapon_list:
-            spear_hit_list = arcade.check_for_collision_with_list(spear, self.enemy_list)
-            """Removes enemies from the hit list"""
-            for enemy in spear_hit_list:
-                enemy.remove_from_sprite_lists()
-                arcade.play_sound(self.enemy_death_sound)
+            """Kills spears the go off screen and enable for periodic shots"""
+            for spear in self.player_weapon_list:
+                if spear.center_x == SCREEN_W:
+                    spear.kill()
+                elif spear.center_x ==SCREEN_W-200:
+                    self.player_sprite.changeWeaponFire()
 
-        """Creates list for enemys' energy blasts with player """
-        for energy_blast in self.enemy_weapon_list:
-            enemy_hit_list = arcade.check_for_collision_with_list(energy_blast, self.player_list)
-            """Removes enemies from the hit list"""
-            for player in enemy_hit_list:
-                player.remove_from_sprite_lists()
-                arcade.play_sound(self.player_death_sound)
-                arcade.pause(5)
-                self.setup()
+            """Randomly spawns an enemy couple of seconds"""
+            if random.randrange(250) == 0:
+                self.spawn_enemy()
+            self.enemy_shoot()
+
+            """Creates list for player spears with enemy mobs"""
+            for spear in self.player_weapon_list:
+                spear_hit_list = arcade.check_for_collision_with_list(spear, self.enemy_list)
+                """Removes enemies from the hit list"""
+                for enemy in spear_hit_list:
+                    enemy.remove_from_sprite_lists()
+                    arcade.play_sound(self.enemy_death_sound)
+
+            """Creates list for enemys' energy blasts with player """
+            for energy_blast in self.enemy_weapon_list:
+                enemy_hit_list = arcade.check_for_collision_with_list(energy_blast, self.player_list)
+                """Removes enemies from the hit list"""
+                for player in enemy_hit_list:
+                    player.remove_from_sprite_lists()
+                    arcade.play_sound(self.player_death_sound)
+                    arcade.pause(2)
+                    self.currentGameState = 'GAME_OVER'
+        elif self.currentGameState == 'GAME_OVER':
+            pass
 
     def spawn_enemy(self):
         #Image is by TearOfTheStar on opengameart.org
