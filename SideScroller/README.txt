@@ -1,7 +1,7 @@
 2D Game Design Project Program
 Game Name: "Quacker's Hunt"
 Created by Davina Reis Sardinha
-last edit on September 21th, 2019
+last edit on October 1st, 2019
 
 What is the purpose of the program?
 
@@ -21,3 +21,11 @@ What keys to use?
 When pressing the 'SPACE' bar, a small spear sprite will move in front of the player and move across the screen to the right.
 When the spear is in the air, an audio sound effect will play in the background to give the illusion of the spear being
 thrown.
+
+How the game works?
+    There are two types of enemies in this side scroller being small ghosts that shoot energy blasts. The first type spawns a blue ghost sprite that
+occasionally fires throughout the game and can be killed in one hit. Only after does the player scores more than 1,000 points will the second type spawn.
+The second type is a red ghost sprite of the same style that initially spawns outside of the screen and moves to the left slowly
+as they fire towards the player. This version of the enemy can be kill in two shots. If at anytime the player is hit by the enemy's energy blast,
+the player will die and a game over screen will pop up. In order to win the game, the player must score more than 5,000 points to have a cheery victory tone played
+to award your great effort. Good luck and happy hunting! :)
