@@ -14,19 +14,9 @@ ENEMY_SPRITE_SCALING = 0.625
 
 
 class BaseEnemy(arcade.Sprite):
-    def __init__(self,image_location, scaling, x_position, y_position, motionSpeed = 0, moveAuto = False):
+    def __init__(self,image_location, scaling, x_position, y_position, health = None):
         super().__init__(filename=image_location, scale=scaling, center_x=x_position,center_y=y_position)
-        self.moveAuto = moveAuto
-        self.motionSpeed = motionSpeed
-        self.health = None
-
-    def update(self):
-        if self.moveAuto == True:
-           self.center_x -= self.motionSpeed
-
-        pass
-
-
+        self.health = health
 
 
 class BasePlayer(arcade.Sprite):
@@ -175,6 +165,7 @@ class MinimalArcade(arcade.Window):
             self.player_weapon_list.draw()
             self.enemy_weapon_list.draw()
             self.enemy_list.draw()
+
         elif self.currentGameState == "GAME_OVER":
             self.draw_game_over()
         elif self.currentGameState == 'GAME_WIN':
@@ -189,6 +180,11 @@ class MinimalArcade(arcade.Window):
         """Logic for Game over screen"""
         arcade.draw_text("You lost!", SCREEN_W/2, SCREEN_H/2, arcade.color.ANTIQUE_RUBY, font_size=64, font_name='arial', anchor_x='center')
         arcade.set_background_color(arcade.color.PURPLE_HEART)
+
+    def perform_game_over(self):
+        arcade.play_sound(self.player_death_sound)
+        arcade.pause(2)
+        arcade.play_sound(self.losing_ending_sound)
 
     def draw_game_win(self):
         """Logic for Game win screen"""
@@ -212,11 +208,12 @@ class MinimalArcade(arcade.Window):
             """Calls to move player"""
             self.player_sprite.move()
             self.player_weapon_list.update()
-            self.enemy_sprite.update()
+            self.enemy_list.update()
             self.enemy_weapon_list.update()
 
+
             """Logic method for collisons and keeping score"""
-            self.update_kill_check()
+            self.update_collision_check()
 
 
             """Randomly spawns an enemy couple of seconds"""
@@ -238,11 +235,11 @@ class MinimalArcade(arcade.Window):
             """Calls to move player"""
             self.player_sprite.move()
             self.player_weapon_list.update()
-            self.enemy_sprite.update()
+            self.enemy_list.update()
             self.enemy_weapon_list.update()
 
             """Logic method for collisons and keeping score"""
-            self.update_kill_check()
+            self.update_collision_check()
 
             """Randomly spawns an enemy couple of seconds"""
             if random.randrange(200) == 0:
@@ -254,7 +251,7 @@ class MinimalArcade(arcade.Window):
             self.enemy_shoot()
 
             """Check's if player meets min score for escalate mode"""
-            if self.gameScore >= 5000:
+            if self.gameScore >= 6800:
                 self.currentGameState = 'GAME_WIN'
                 arcade.pause(2)
                 arcade.play_sound(self.win_ending_sound)
@@ -267,13 +264,18 @@ class MinimalArcade(arcade.Window):
         else:
             self.currentGameState = 'GAME_OVER'
 
-    def update_kill_check(self):
+    def update_collision_check(self):
         """Kills spears the go off screen and enable for periodic shots"""
         for spear in self.player_weapon_list:
             if spear.center_x == (SCREEN_W + 150):
                 spear.kill()
             elif spear.center_x == SCREEN_W - 200:
                 self.player_sprite.changeWeaponFire()
+
+        """Kills enemy sprites if they go off screen"""
+        for enemy in  self.enemy_list:
+            if enemy.center_x == (0):
+                enemy.kill()
 
         """Creates list for player spears that hit enemy sprites"""
         for spear in self.player_weapon_list:
@@ -286,21 +288,26 @@ class MinimalArcade(arcade.Window):
 
                 "Check if enemies health is below or equal to 0"
                 if enemy.health <= 0:
-                    enemy.remove_from_sprite_lists()
+                    enemy.kill()
                     arcade.play_sound(self.enemy_death_sound)
 
         """Creates list for enemy's' energy blasts with player """
         for energy_blast in self.enemy_weapon_list:
             enemy_hit_list = arcade.check_for_collision_with_list(energy_blast, self.player_list)
 
-            """Removes enemies from the hit list"""
+            """Removes player from the hit list"""
             for player in enemy_hit_list:
                 player.remove_from_sprite_lists()
-                arcade.play_sound(self.player_death_sound)
-                arcade.pause(2)
-                arcade.play_sound(self.losing_ending_sound)
                 self.currentGameState = "GAME_OVER"
-        pass
+                self.perform_game_over()
+
+        """Collision list if ghost sprite hits player"""
+        for player in self.player_list:
+            player_hit_enemy = arcade.check_for_collision_with_list(player, self.enemy_list)
+
+            if player_hit_enemy.__len__() >= 1:
+                self.currentGameState = "GAME_OVER"
+                self.perform_game_over()
 
     def run_background(self, multiplier):
         """Background One"""
@@ -319,19 +326,15 @@ class MinimalArcade(arcade.Window):
 
         #Image is by TearOfTheStar on opengameart.org
         if type == 1:
-            self.enemy_sprite = BaseEnemy(self.image_path + "enemy.png", ENEMY_SPRITE_SCALING, random.randrange(SCREEN_W / 2, SCREEN_W),
-                                          random.randrange(SCREEN_H))
-            self.enemy_sprite.health = 1000
-            self.enemy_list.append(self.enemy_sprite)
+            self.enemy_sprite = BaseEnemy(self.image_path + "enemy.png", ENEMY_SPRITE_SCALING, random.randrange(SCREEN_W, SCREEN_W+10),
+                                          random.randrange(SCREEN_H), 1000)
+            self.enemy_sprite.change_x = -1
         elif type == 2:
             self.enemy_sprite = BaseEnemy(self.image_path + "enemy2.png", ENEMY_SPRITE_SCALING,
-                                          random.randrange(SCREEN_W, SCREEN_W+150),
-                                          random.randrange(SCREEN_H))
-            self.enemy_sprite.moveAuto = True
-            self.enemy_sprite.motionSpeed= 2
-            self.enemy_sprite.health = 2000
-            self.enemy_list.append(self.enemy_sprite)
-        pass
+                                          random.randrange(SCREEN_W, SCREEN_W+10),
+                                          random.randrange(SCREEN_H), 2000)
+            self.enemy_sprite.change_x = -2
+        self.enemy_list.append(self.enemy_sprite)
 
     def player_shoot(self):
         """Logic when the player activates weapon"""
@@ -351,8 +354,8 @@ class MinimalArcade(arcade.Window):
             #if the following random condition meets, then that enemy fire a shoot
             if random.randrange(200) == 25:
                 enemy_weapon_sprite = BaseEnemy(self.image_path + "energy_Blast.png", PLAYER_SPRITE_SCALING / 2, enemy.center_x,
-                                                enemy.center_y, 5, True)
-
+                                                enemy.center_y)
+                enemy_weapon_sprite.change_x = -5
                 self.enemy_weapon_list.append(enemy_weapon_sprite)
                 arcade.play_sound(self.energy_sound)
         pass

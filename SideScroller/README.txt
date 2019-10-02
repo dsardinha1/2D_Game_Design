@@ -27,5 +27,5 @@ How the game works?
 occasionally fires throughout the game and can be killed in one hit. Only after does the player scores more than 1,000 points will the second type spawn.
 The second type is a red ghost sprite of the same style that initially spawns outside of the screen and moves to the left slowly
 as they fire towards the player. This version of the enemy can be kill in two shots. If at anytime the player is hit by the enemy's energy blast,
-the player will die and a game over screen will pop up. In order to win the game, the player must score more than 5,000 points to have a cheery victory tone played
+the player will die and a game over screen will pop up. In order to win the game, the player must score more than 6,800 points to have a cheery victory tone played
 to award your great effort. Good luck and happy hunting! :)
